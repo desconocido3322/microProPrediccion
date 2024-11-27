@@ -1,97 +1,112 @@
-#librerias 
-
-import pandas as pd 
+import pandas as pd
+import json
+from datetime import datetime
 import numpy as np
+import tensorflow as tf
+
+from tensorflow.keras.layers import LSTM, Input, Dense
+from tensorflow.keras.models import Sequential, load_model
+from tensorflow.keras.losses import MeanSquaredError
+
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+
+import random as rd
 import matplotlib.pyplot as plt
-import seaborn as sns
-import datetime as dt
-import scipy.stats
-import statsmodels.formula.api as sm
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from mpl_toolkits.mplot3d import Axes3D 
+import os
 
-#datasets 
-#dataset1=csv_egresos.csv= data1.csv 
-cat_dataset = pd.read_csv('data1.csv', sep =';', encoding='latin1')
-#dataset2=Delitos_CSV.csv = data2.csv 
-cat_MINPUB = pd.read_csv('data2.csv', sep =';', encoding='latin1')
-df_del =pd.read_csv('data2.csv', sep =';')
-#dataset3=Egresos_gendarmeria.csv= data3.csv
-df_egr = pd.read_csv('data3.csv', sep =';', encoding='latin1')
-df_fin = pd.merge(df_del, df_egr, on ='COD_DELITO')
+json_file = 'datos.csv'
 
+with open(json_file, 'r') as file:
+    data = json.load(file)  
 
-df_fin.columns
-df_fin.info()
-df_fin2 = df_fin
-df_final = df_fin2.drop_duplicates()
+if isinstance(data, list):
+    dataFrame = pd.DataFrame(data)
+else:
+    dataFrame = pd.DataFrame([data])  
 
-df_final["COD_PERS"].value_counts()
-df_final.groupby(['MES_EGRESO', 'COD_PERS','Codigo', 'COD_DELITO'])['SCORE'].sum()
-df_fin2.isnull().sum()
-df_fin2.nunique()
-df_fin2['COD_DELITO'].unique()
-df_fin2['MES_EGRESO'].unique()
+csv_file = 'datos_convertidos.csv'
+dataFrame.to_csv(csv_file, index=False)
 
-df_fin2['MES_EGRESO'].value_counts()
-df_fin2['MES_EGRESO'] = df_fin2['MES_EGRESO'].astype(str)
-df_fin2.groupby(['MES_EGRESO'])['SCORE'].sum()
+print(f"Archivo CSV creado: {csv_file}")
 
-score = df_fin2.groupby(['MES_EGRESO','COD_PERS']).agg({'SCORE': lambda x: x.sum()})
-score.reset_index(inplace=True)
+csv_file = 'datos_convertidos.csv'
+df = pd.read_csv(csv_file)
 
-col =['COD_PERS', 'MES_EGRESO', 'SCORE', 'COD_DELITO','Codigo']
-rfm = df_fin2[col]
+df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-rfm['MES_EGRESO'] = pd.to_datetime(rfm['MES_EGRESO'],errors ='coerce')
-rfm['MES_EGRESO'].max()
-f_corte = dt.datetime(2022,7,1)
-rfm = rfm.drop_duplicates()
-RFM1 = rfm.groupby('COD_PERS').agg({'MES_EGRESO': lambda x: (f_corte - x.max()).days})
-RFM1['Frecuencia'] = (rfm.groupby(by=['COD_PERS'])['Codigo'].count()).astype(float)
-RFM1['ScoreTotal'] = rfm.groupby(by=['COD_PERS']).agg({'SCORE': 'sum'})
+df['hour'] = df['timestamp'].dt.floor('H')
 
-RFM1.rename(columns={'MES_EGRESO': 'Egreso más reciente'}, inplace=True)
+df = df.drop(columns=['_id', '__v', 'timestamp'])
 
-RFM1[RFM1['Egreso más reciente'] == 0]
-RFM1[RFM1['Frecuencia'] == 0]
-RFM1[RFM1['ScoreTotal'] == 0]
-RFM1 = RFM1[RFM1['Egreso más reciente'] > 0]
-RFM1.reset_index(drop=True,inplace=True)
-RFM1 = RFM1[RFM1['Frecuencia'] > 0]
-RFM1.reset_index(drop=True,inplace=True)
-RFM1 = RFM1[RFM1['ScoreTotal'] > 0]
-RFM1.reset_index(drop=True,inplace=True)
+grouped = df.groupby('hour').mean()
 
-Data_RFM1 = RFM1[['Egreso más reciente','Frecuencia','ScoreTotal']]
+print(grouped)
 
-data_log = np.log(Data_RFM1)
-scaler = StandardScaler()
-scaler.fit(data_log)
-data_sc = scaler.transform(data_log)
-df_norm = pd.DataFrame(data_sc, columns=Data_RFM1.columns)
+filtered_dataFrame = grouped[['temperature', 'humidity', 'light']]
+print(filtered_dataFrame)
+
+model_path = "model.h5"
+
+tempData = filtered_dataFrame['temperature'].values
+humidityData = filtered_dataFrame['humidity'].values
+lightData = filtered_dataFrame['light'].values
+
+print(tempData)
+print(humidityData)
+print(lightData)
 
 
-#plots 
-def plots_model():    
-    fig = plt.figure(figsize=(10, 7))
-    ax = fig.add_subplot(111, projection='3d')
-    
-    for x in RFM1.grupos.unique():        
-        xs = RFM1[RFM1.grupos == x]['Egreso más reciente']
-        zs = RFM1[RFM1.grupos == x]['Frecuencia']
-        ys = RFM1[RFM1.grupos == x]['ScoreTotal']
-        ax.scatter(xs, ys, zs, s=50, alpha=0.6, edgecolors='w', label = x)
+X = np.column_stack((humidityData, lightData))  
+y = tempData 
 
-    plt.legend()
-    plt.title('Clusters del Modelo KMeans')
-    plt.savefig('clusters_plot.png')  # Guardar el gráfico como un archivo PNG
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
+model_path = "model.h5"
 
-model = KMeans(n_clusters=4, init='k-means++', max_iter=301)
-grupos = model.fit_predict(df_norm)
-df_norm['grupos'] = grupos
-RFM1['grupos'] = grupos
-plots_model()
-plt.show()
+if os.path.exists(model_path):
+    print(f"Cargando modelo existente desde {model_path}...")
+    model = load_model(model_path, custom_objects={'mse': MeanSquaredError()})
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+else:
+    print("No se encontró un modelo existente. Creando uno nuevo...")
+    model = Sequential([
+        Input(shape=(2,)),  
+        Dense(64, activation='relu'),
+        Dense(32, activation='relu'),
+        Dense(1, activation='linear')  
+    ])
+    model.compile(
+        optimizer='adam',
+        loss=MeanSquaredError(),
+        metrics=['mae']
+    )
+    model.summary()
+
+history = model.fit(
+    X_train, y_train,
+    epochs=50,
+    batch_size=4,
+    validation_data=(X_test, y_test),
+    verbose=1
+)
+
+model.save(model_path)
+print(f"Modelo guardado en {model_path}.")
+
+loss, mae = model.evaluate(X_test, y_test, verbose=0)
+print(f'Validation Loss: {loss:.4f}')
+print(f'Mean Absolute Error (MAE): {mae:.4f}')
+
+predictions = model.predict(X_test)
+
+r2 = r2_score(y_test, predictions)
+mse = mean_squared_error(y_test, predictions)
+
+print(f'R^2 Score: {r2:.4f}')
+print(f'Mean Squared Error (MSE): {mse:.4f}')
+
+print("\nValores Reales:")
+print(y_test)
+print("\nPredicciones:")
+print(predictions.flatten())
