@@ -54,7 +54,7 @@ def create_sequences(data, seq_length):
         sequences.append(data[i:i + seq_length])
     return np.array(sequences)
 
-seq_length = 10  # Longitud de la secuencia (puedes ajustarlo)
+seq_length = 2  # Longitud de la secuencia (puedes ajustarlo)
 X = np.column_stack((humidityData, lightData))
 X_seq = create_sequences(X, seq_length)  # Convertir X en secuencias
 y = tempData[seq_length:]  # Ajustar el tamaño de y para que coincida con X
