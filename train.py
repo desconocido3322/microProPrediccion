@@ -4,6 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 import tensorflow as tf
 import sys
+import json
 
 json_file = 'datos.csv'
 
