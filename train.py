@@ -7,8 +7,6 @@ from tensorflow.keras.layers import LSTM, Input, Dense
 from tensorflow.keras.models import Sequential, load_model
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
-import random as rd
-import matplotlib.pyplot as plt
 import os
 from tensorflow.keras.losses import MeanSquaredError
 
@@ -49,14 +47,19 @@ tempData = filtered_dataFrame['temperature'].values
 humidityData = filtered_dataFrame['humidity'].values
 lightData = filtered_dataFrame['light'].values
 
-print(tempData)
-print(humidityData)
-print(lightData)
+# Reestructurar los datos en forma de secuencia
+def create_sequences(data, seq_length):
+    sequences = []
+    for i in range(len(data) - seq_length):
+        sequences.append(data[i:i + seq_length])
+    return np.array(sequences)
 
-X = np.column_stack((humidityData, lightData))  
-y = tempData 
+seq_length = 10  # Longitud de la secuencia (puedes ajustarlo)
+X = np.column_stack((humidityData, lightData))
+X_seq = create_sequences(X, seq_length)  # Convertir X en secuencias
+y = tempData[seq_length:]  # Ajustar el tamaño de y para que coincida con X
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X_seq, y, test_size=0.2, random_state=42)
 
 model_path = "model.h5"
 
@@ -67,10 +70,9 @@ if os.path.exists(model_path):
 else:
     print("No se encontró un modelo existente. Creando uno nuevo...")
     model = Sequential([
-        Input(shape=(2,)),  
-        Dense(64, activation='relu'),
+        LSTM(64, activation='relu', input_shape=(seq_length, 2), return_sequences=False),
         Dense(32, activation='relu'),
-        Dense(1, activation='linear')  
+        Dense(1, activation='linear')
     ])
     model.compile(
         optimizer='adam',
@@ -106,4 +108,3 @@ print("\nValores Reales:")
 print(y_test)
 print("\nPredicciones:")
 print(predictions.flatten())
-
