@@ -23,7 +23,17 @@ csv_file = 'datos_convertidos.csv'
 dataFrame.to_csv(csv_file, index=False)
 
 print(f"Archivo CSV creado: {csv_file}")
+df = pd.read_csv(csv_file)
 
+df['timestamp'] = pd.to_datetime(df['timestamp'])
+
+df['hour'] = df['timestamp'].dt.floor('H')
+
+df = df.drop(columns=['_id', '__v', 'timestamp'])
+
+grouped = df.groupby('hour').mean()
+
+print(grouped)
 # Configuración de semillas para reproducibilidad
 seed = 12122008
 np.random.seed(seed)
@@ -31,7 +41,7 @@ tf.random.set_seed(seed)
 
 # Convertir el argumento a una lista de valores
 try:
-    datos = list(eval(sys.argv[1]))  # Convierte el argumento en una lista
+    grouped = list(eval(sys.argv[1]))  # Convierte el argumento en una lista
     if not isinstance(datos, list) or len(datos) != 3:
         raise ValueError
 except:
