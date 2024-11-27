@@ -3,6 +3,7 @@ from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
 import pandas as pd
 import sys
+import os
 
 # Configuración de semillas para reproducibilidad
 seed = 12122008
@@ -25,6 +26,8 @@ filtered_dataFrame = grouped[['temperature', 'humidity', 'light']]
 
 # Normalizar los datos de entrada
 scaler = MinMaxScaler()
+# Ajustar el scaler con el rango completo de datos (si se entrenó con estos datos)
+scaler.fit(filtered_dataFrame[['temperature', 'humidity', 'light']])
 
 # Para predicción, supongamos que los datos se pasan como argumento
 try:
@@ -36,7 +39,7 @@ except:
     sys.exit(1)
 
 # Normalizamos los datos de entrada
-datos_scaled = scaler.fit_transform([datos])  # Asegúrate de normalizar los datos antes de la predicción
+datos_scaled = scaler.transform([datos])  # Asegúrate de normalizar los datos antes de la predicción
 
 # Redimensionar los datos para que sean compatibles con LSTM
 datos_scaled = datos_scaled.reshape((1, 1, len(datos)))  # [1 muestra, 1 timestep, 3 características]
