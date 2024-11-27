@@ -32,7 +32,7 @@ df['hour'] = df['timestamp'].dt.floor('H')
 df = df.drop(columns=['_id', '__v', 'timestamp'])
 
 grouped = df.groupby('hour').mean()
-
+grouped = grouped.drop(columns=['hour'])
 print(grouped)
 # Configuración de semillas para reproducibilidad
 seed = 12122008
