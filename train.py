@@ -5,6 +5,7 @@ from tensorflow.keras.models import load_model
 import tensorflow as tf
 import sys
 import json
+import pandas as pd
 
 json_file = 'datos.csv'
 
