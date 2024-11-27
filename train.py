@@ -89,8 +89,7 @@ history = model.fit(
     verbose=1
 )
 
-model.save(model_path)
-print(f"Modelo guardado en {model_path}.")
+model.save('model_lstm.h5')
 
 loss, mae = model.evaluate(X_test, y_test, verbose=0)
 print(f'Validation Loss: {loss:.4f}')
