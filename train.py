@@ -7,30 +7,21 @@ import sys
 import json
 import pandas as pd
 
-# Cargar los datos del archivo JSON
-json_file = 'datos.csv'
+# Cargar los datos del archivo CSV en lugar de JSON
+csv_file = 'datos.csv'
 
-with open(json_file, 'r') as file:
-    data = json.load(file)
-
-# Verificar si los datos son una lista o un diccionario
-if isinstance(data, list):
-    dataFrame = pd.DataFrame(data)
-else:
-    dataFrame = pd.DataFrame([data])
-
-# Guardar los datos en un archivo CSV
-csv_file = 'datos_convertidos.csv'
-dataFrame.to_csv(csv_file, index=False)
-
-print(f"Archivo CSV creado: {csv_file}")
-df = pd.read_csv(csv_file)
+# Cargar el archivo CSV
+try:
+    df = pd.read_csv(csv_file)
+except Exception as e:
+    print(f"Error al cargar el archivo CSV: {e}")
+    sys.exit(1)
 
 # Convertir la columna 'timestamp' a tipo datetime
 df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-# Agrupar por hora usando timestamp y calcular la media para cada hora
-df.set_index('timestamp', inplace=True)  # Establecer timestamp como índice
+# Agrupar por hora usando 'timestamp' y calcular la media para cada hora
+df.set_index('timestamp', inplace=True)  # Establecer 'timestamp' como índice
 df_resampled = df.resample('H').mean()  # Agrupar por hora y obtener la media de cada columna
 
 # Mostrar los datos agrupados por hora
