@@ -1,67 +1,109 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler
-from tensorflow.keras.models import load_model
-import tensorflow as tf
-import sys
-import json
 import pandas as pd
+import json
+from datetime import datetime
+import numpy as np
+import tensorflow as tf
+from tensorflow.keras.layers import LSTM, Input, Dense
+from tensorflow.keras.models import Sequential, load_model
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
+import random as rd
+import matplotlib.pyplot as plt
+import os
+from tensorflow.keras.losses import MeanSquaredError
 
-# Cargar los datos del archivo CSV en lugar de JSON
-csv_file = 'datos.csv'
+json_file = 'datos.csv'
 
-# Cargar el archivo CSV
-try:
-    df = pd.read_csv(csv_file)
-except Exception as e:
-    print(f"Error al cargar el archivo CSV: {e}")
-    sys.exit(1)
+with open(json_file, 'r') as file:
+    data = json.load(file)  
 
-# Convertir la columna 'timestamp' a tipo datetime
+if isinstance(data, list):
+    dataFrame = pd.DataFrame(data)
+else:
+    dataFrame = pd.DataFrame([data])  
+
+csv_file = 'datos_convertidos.csv'
+dataFrame.to_csv(csv_file, index=False)
+
+print(f"Archivo CSV creado: {csv_file}")
+
+csv_file = 'datos_convertidos.csv'
+df = pd.read_csv(csv_file)
+
 df['timestamp'] = pd.to_datetime(df['timestamp'])
 
-# Agrupar por hora usando 'timestamp' y calcular la media para cada hora
-df.set_index('timestamp', inplace=True)  # Establecer 'timestamp' como índice
-df_resampled = df.resample('H').mean()  # Agrupar por hora y obtener la media de cada columna
+df['hour'] = df['timestamp'].dt.floor('H')
 
-# Mostrar los datos agrupados por hora
-print(df_resampled)
+df = df.drop(columns=['_id', '__v', 'timestamp'])
 
-# Configuración de semillas para reproducibilidad
-seed = 12122008
-np.random.seed(seed)
-tf.random.set_seed(seed)
+grouped = df.groupby('hour').mean()
 
-# Convertir el argumento a una lista de valores (si se pasa por línea de comandos)
-try:
-    datos = list(eval(sys.argv[1]))  # Convierte el argumento en una lista
-    if not isinstance(datos, list) or len(datos) != 3:
-        raise ValueError
-except:
-    print("Error: El argumento debe ser una lista de 3 valores. Ejemplo: '[13.2, 13.3, 13.4]'")
-    sys.exit(1)
+print(grouped)
 
-# Cargar el modelo entrenado
-try:
-    model = load_model("model_lstm.h5")
-except Exception as e:
-    print(f"Error al cargar el modelo: {e}")
-    sys.exit(1)
+filtered_dataFrame = grouped[['temperature', 'humidity', 'light']]
+print(filtered_dataFrame)
 
-# Normalizar los datos de entrada
-scaler = MinMaxScaler()
-datos_scaled = scaler.fit_transform([datos])  # Asegúrate de normalizar los datos antes de la predicción
+model_path = "model.h5"
 
-# Redimensionar los datos para que sean compatibles con LSTM
-datos_scaled = datos_scaled.reshape((1, 1, len(datos)))  # [1 muestra, 1 timestep, 3 características]
+tempData = filtered_dataFrame['temperature'].values
+humidityData = filtered_dataFrame['humidity'].values
+lightData = filtered_dataFrame['light'].values
 
-# Realizar la predicción
-prediccion = model.predict(datos_scaled, verbose=0)[0][0]
-print(f"Predicción de la temperatura en 1 hora: {prediccion:.2f}")
+print(tempData)
+print(humidityData)
+print(lightData)
 
-# Ejemplo de creación de un gráfico (ajusta según tu necesidad)
-plt.scatter([1, 2, 3], [12, 13, 14], c='blue', label='Datos')  # Datos de ejemplo
+X = np.column_stack((humidityData, lightData))  
+y = tempData 
 
-# Guardar el gráfico como una imagen PNG
-plt.savefig('clusters_plot.png')
-print("Gráfico guardado en 'clusters_plot.png'")
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+model_path = "model.h5"
+
+if os.path.exists(model_path):
+    print(f"Cargando modelo existente desde {model_path}...")
+    model = load_model(model_path, custom_objects={'mse': MeanSquaredError()})
+    model.compile(optimizer='adam', loss='mean_squared_error', metrics=['mae'])
+else:
+    print("No se encontró un modelo existente. Creando uno nuevo...")
+    model = Sequential([
+        Input(shape=(2,)),  
+        Dense(64, activation='relu'),
+        Dense(32, activation='relu'),
+        Dense(1, activation='linear')  
+    ])
+    model.compile(
+        optimizer='adam',
+        loss=MeanSquaredError(),
+        metrics=['mae']
+    )
+    model.summary()
+
+history = model.fit(
+    X_train, y_train,
+    epochs=50,
+    batch_size=4,
+    validation_data=(X_test, y_test),
+    verbose=1
+)
+
+model.save(model_path)
+print(f"Modelo guardado en {model_path}.")
+
+loss, mae = model.evaluate(X_test, y_test, verbose=0)
+print(f'Validation Loss: {loss:.4f}')
+print(f'Mean Absolute Error (MAE): {mae:.4f}')
+
+predictions = model.predict(X_test)
+
+r2 = r2_score(y_test, predictions)
+mse = mean_squared_error(y_test, predictions)
+
+print(f'R^2 Score: {r2:.4f}')
+print(f'Mean Squared Error (MSE): {mse:.4f}')
+
+print("\nValores Reales:")
+print(y_test)
+print("\nPredicciones:")
+print(predictions.flatten())
+
