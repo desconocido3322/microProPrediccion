@@ -1,37 +1,24 @@
 import numpy as np
 from tensorflow.keras.models import load_model
 from sklearn.preprocessing import MinMaxScaler
-import tensorflow as tf
-import sys
 
-# Configuración de semillas para reproducibilidad
-seed = 12122008
-np.random.seed(seed)
-tf.random.set_seed(seed)
+# Últimos valores de humedad, luz y temperatura (puedes reemplazar con los datos actuales)
+ultimo_humedad = 70  # Último valor de humedad
+ultimo_luz = 550  # Último valor de luz
 
-# Convertir el argumento a una lista de valores
-try:
-    datos = list(eval(sys.argv[1]))  # Convierte el argumento en una lista
-    if not isinstance(datos, list) or len(datos) != 3:
-        raise ValueError
-except:
-    print("Error: El argumento debe ser una lista de 3 valores. Ejemplo: '[13.2, 13.3, 13.4]'")
-    sys.exit(1)
+# Preparar los datos de entrada para la predicción
+entrada = np.array([[ultimo_humedad, ultimo_luz]])  # 1 muestra, 2 características
 
-# Cargar el modelo entrenado
-try:
-    model = load_model("model_lstm.h5")
-except Exception as e:
-    print(f"Error al cargar el modelo: {e}")
-    sys.exit(1)
-
-# Normalizar los datos de entrada
+# Normalizar los datos de entrada (de acuerdo con la normalización utilizada en el entrenamiento)
 scaler = MinMaxScaler()
-datos_scaled = scaler.fit_transform([datos])  # Asegúrate de normalizar los datos antes de la predicción
+entrada_scaled = scaler.fit_transform(entrada)  # Normalizar para que tenga el mismo rango que los datos de entrenamiento
 
-# Redimensionar los datos para que sean compatibles con LSTM
-datos_scaled = datos_scaled.reshape((1, 1, len(datos)))  # [1 muestra, 1 timestep, 3 características]
+# Redimensionar la entrada para el modelo LSTM: (samples, time_steps, features)
+entrada_scaled = entrada_scaled.reshape((1, 1, 2))  # 1 muestra, 1 paso de tiempo, 2 características
+
+# Cargar el modelo entrenado (asegúrate de tener el modelo guardado como "model_lstm.h5")
+model = load_model("model_lstm.h5")
 
 # Realizar la predicción
-prediccion = model.predict(datos_scaled, verbose=0)[0][0]
+prediccion = model.predict(entrada_scaled, verbose=0)[0][0]
 print(f"Predicción de la temperatura en 1 hora: {prediccion:.2f}")
