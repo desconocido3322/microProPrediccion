@@ -19,12 +19,25 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-
+        # Instalar TensorFlow si no está incluido en requirements.txt
+        pip install tensorflow
+    
     - name: Run training
       run: python train.py
       
+    - name: Run prediction
+      run: |
+        # Asegúrate de que tienes el archivo 'model.h5' en el repositorio o lo subes a través de un paso anterior
+        python predict.py "[13.2, 13.3]"  # Pasando los datos de ejemplo para la predicción (puedes ajustarlos)
+        
     - name: Upload plot
       uses: actions/upload-artifact@v3
       with:
         name: clusters-plot
         path: clusters_plot.png
+
+    - name: Upload prediction result
+      uses: actions/upload-artifact@v3
+      with:
+        name: prediction-result
+        path: predicho.txt
