@@ -5,6 +5,23 @@ from tensorflow.keras.models import load_model
 import tensorflow as tf
 import sys
 
+json_file = 'datos.csv'
+
+with open(json_file, 'r') as file:
+    data = json.load(file)
+
+# Verificar si los datos son una lista o un diccionario
+if isinstance(data, list):
+    dataFrame = pd.DataFrame(data)
+else:
+    dataFrame = pd.DataFrame([data])
+
+# Guardar los datos en un archivo CSV
+csv_file = 'datos_convertidos.csv'
+dataFrame.to_csv(csv_file, index=False)
+
+print(f"Archivo CSV creado: {csv_file}")
+
 # Configuración de semillas para reproducibilidad
 seed = 12122008
 np.random.seed(seed)
