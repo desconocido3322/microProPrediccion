@@ -14,26 +14,27 @@ df = df.drop(columns=['_id', '__v', 'timestamp'])
 grouped = df.groupby('hour').mean()
 
 # Filtrar las columnas relevantes (humedad y luz)
-filtered_dataFrame = grouped[['temperature', 'humidity', 'light']]
+filtered_dataFrame = grouped[['temperature', 'humidity', 'presion']]
 
 # Tomar los últimos 3 valores de humedad y luz
-humedad_input = filtered_dataFrame['humidity'].iloc[-3:].values  # Últimos 3 valores de humedad
-luz_input = filtered_dataFrame['light'].iloc[-3:].values  # Últimos 3 valores de luz
+humedad_input = filtered_dataFrame['humidity'].iloc[-10:].values  # Últimos 10 valores de humedad
+temperature_input = filtered_dataFrame['temperature'].iloc[-10:].values  # Últimos 10 valores de humedad
+presion_input = filtered_dataFrame['presion'].iloc[-10:].values  # Últimos 10 valores de luz
 
-# Concatenar los datos de humedad y luz en un solo array de 3 timesteps y 2 características
-datos_input = np.array([humedad_input, luz_input]).T.reshape(1, 3, 2)  # Forma (1, 3, 2)
+# Concatenar los datos de humedad y luz en un solo array de 3 timesteps y 3 características
+datos_input = np.array([humedad_input, presion_input,temperature_input]).T.reshape(1, 10, 3)  # Forma (1, 3, 3)
 
 # Mostrar los valores de entrada que estamos utilizando
-print(f"Últimos 3 valores de humedad: {humedad_input}")
-print(f"Últimos 3 valores de luz: {luz_input}")
+print(f"Últimos 10 valores de humedad: {humedad_input}")
+print(f"Últimos 10 valores de luz: {luz_input}")
 print(f"Datos de entrada para el modelo: {datos_input}")
 
 # Normalizar los datos de entrada con el scaler (se supone que ya tienes un scaler ajustado)
 scaler = MinMaxScaler()
-datos_input_scaled = scaler.fit_transform(datos_input.reshape(-1, 2))  # Normalización de 2 características (humedad, luz)
+datos_input_scaled = scaler.fit_transform(datos_input.reshape(-1, 3))  # Normalización de 3 características (humedad, presion, temperatura)
 
 # Redimensionar para el modelo LSTM
-datos_input_scaled = datos_input_scaled.reshape(1, 3, 2)  # [1 muestra, 3 timesteps, 2 características]
+datos_input_scaled = datos_input_scaled.reshape(1, 3, 3)  # [1 muestra, 3 timesteps, 3 características]
 
 # Cargar el modelo entrenado
 try:
