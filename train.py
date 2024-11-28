@@ -57,16 +57,15 @@ X_train, X_test, y_train, y_test = train_test_split(X_seq, y, test_size=0.2, ran
 # Verificar la forma de X_train antes del reshape
 print(f"Forma de X_train antes del reshape: {X_train.shape}")
 
-# Asegúrate de que el número de muestras sea divisible por seq_length
+# Verificar si el número de muestras es suficiente para el reshape
 num_samples = X_train.shape[0]
-if num_samples % seq_length != 0:
-    print(f"Advertencia: El número de muestras ({num_samples}) no es divisible por {seq_length}. Ajustando el número de muestras.")
-    # Si es necesario, puedes recortar o ajustar el número de muestras para que sea divisible
-    X_train = X_train[:-(num_samples % seq_length)]  # Recorta para que sea divisible por seq_length
+if num_samples < seq_length:
+    print(f"Advertencia: El número de muestras ({num_samples}) es menor que seq_length ({seq_length}). Ajustando el valor de seq_length.")
+    seq_length = num_samples  # Ajustar seq_length para que sea igual al número de muestras
 
 # Redimensionar los datos para que sean compatibles con LSTM
-X_train = X_train.reshape((X_train.shape[0] // seq_length, seq_length, 2))  # 2 es el número de características (humedad y luz)
-X_test = X_test.reshape((X_test.shape[0] // seq_length, seq_length, 2))  # Hacer lo mismo con X_test
+X_train = X_train.reshape((X_train.shape[0], seq_length, 2))  # 2 es el número de características (humedad y luz)
+X_test = X_test.reshape((X_test.shape[0], seq_length, 2))  # Hacer lo mismo con X_test
 
 print(f"Forma de X_train después del reshape: {X_train.shape}")
 print(f"Forma de X_test después del reshape: {X_test.shape}")
