@@ -123,9 +123,6 @@ print(f'Mean Absolute Error (MAE): {mae:.4f}')
 # Hacer predicciones
 predictions = model.predict(X_test)
 
-print(predictions)
-print(y_test)
-
 # Calcular métricas de desempeño
 r2 = r2_score(y_test, predictions)
 mse = mean_squared_error(y_test, predictions)
