@@ -69,7 +69,7 @@ print(f"Datos originales: {datos}")
 print(f"Datos escalados: {datos_scaled}")
 
 # 3. Cargar el modelo y realizar predicción
-model_path = "model.h5"
+model_path = "model_lstm.h5"
 
 if not os.path.exists(model_path):
     print(f"No se encontró el modelo entrenado en {model_path}. Asegúrate de entrenar el modelo primero.")
