@@ -44,22 +44,22 @@ grouped = df.groupby('hour').mean()
 print(grouped)
 
 # Seleccionar las columnas relevantes
-filtered_dataFrame = grouped[['temperature', 'humidity', 'light']]
+filtered_dataFrame = grouped[['temperature', 'humidity', 'presion']]
 print(filtered_dataFrame)
 
 # Preparar datos para el modelo
 tempData = filtered_dataFrame['temperature'].values
 humidityData = filtered_dataFrame['humidity'].values
-lightData = filtered_dataFrame['light'].values
+presionData = filtered_dataFrame['presion'].values
 
 # Normalizar los datos
 scaler = MinMaxScaler()
-scaled_data = np.column_stack((humidityData, lightData))
-scaled_data = scaler.fit_transform(scaled_data)  # Normalización de humedad y luz
+scaled_data = np.column_stack((humidityData, presionData, tempData))
+scaled_data = scaler.fit_transform(scaled_data)  # Normalización de humedad, temperatura y presion
 
 # Crear datos en formato secuencial para LSTM
-time_steps = 3  # Ventana de tiempo para secuencias
-features = 2    # Número de características (humidity, light)
+time_steps = 10  # Ventana de tiempo para secuencias
+features = 3    # Número de características (temperature,humidity, presion)
 
 def create_sequences(data, labels, time_steps):
     X, y = [], []
