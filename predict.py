@@ -35,14 +35,14 @@ scaler = MinMaxScaler()
 datos_input_scaled = scaler.fit_transform(datos_input.reshape(-1, 3))  # Normalización de 3 características (humedad, presion, temperatura)
 
 # Redimensionar para el modelo LSTM
-datos_input_scaled = datos_input_scaled.reshape(1, 3, 3)  # [1 muestra, 3 timesteps, 3 características]
+datos_input_scaled = datos_input_scaled.reshape(1, 10, 3)  # [1 muestra, 10 timesteps, 3 características]
 
 # Cargar el modelo entrenado
 try:
     model = load_model("model.h5")
 except Exception as e:
     print(f"Error al cargar el modelo: {e}")
-    exit(1)
+    exit(333)
 
 # Realizar la predicción
 prediccion = model.predict(datos_input_scaled, verbose=0)[0][0]
