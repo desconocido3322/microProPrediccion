@@ -36,7 +36,7 @@ datos_input_scaled = datos_input_scaled.reshape(1, 1, 2)  # [1 muestra, 1 timest
 
 # Cargar el modelo entrenado
 try:
-    model = load_model("model_lstm.h5")
+    model = load_model("model.h5")
 except Exception as e:
     print(f"Error al cargar el modelo: {e}")
     exit(1)
