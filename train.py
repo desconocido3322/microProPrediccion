@@ -9,6 +9,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 import os
 from tensorflow.keras.losses import MeanSquaredError
+from sklearn.preprocessing import MinMaxScaler
 
 # Cargar archivo JSON y convertirlo en un DataFrame
 json_file = 'datos.csv'
@@ -51,6 +52,11 @@ tempData = filtered_dataFrame['temperature'].values
 humidityData = filtered_dataFrame['humidity'].values
 lightData = filtered_dataFrame['light'].values
 
+# Normalizar los datos
+scaler = MinMaxScaler()
+scaled_data = np.column_stack((humidityData, lightData))
+scaled_data = scaler.fit_transform(scaled_data)  # Normalización de humedad y luz
+
 # Crear datos en formato secuencial para LSTM
 time_steps = 3  # Ventana de tiempo para secuencias
 features = 2    # Número de características (humidity, light)
@@ -62,11 +68,8 @@ def create_sequences(data, labels, time_steps):
         y.append(labels[i + time_steps])
     return np.array(X), np.array(y)
 
-# Combinar las características en un solo array
-data = np.column_stack((humidityData, lightData))
-
 # Crear las secuencias para LSTM
-X, y = create_sequences(data, tempData, time_steps)
+X, y = create_sequences(scaled_data, tempData, time_steps)
 
 # Dividir los datos en conjunto de entrenamiento y prueba
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
