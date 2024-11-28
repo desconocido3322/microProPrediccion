@@ -26,7 +26,8 @@ datos_input = np.array([humedad_input, presion_input,temperature_input]).T.resha
 
 # Mostrar los valores de entrada que estamos utilizando
 print(f"Últimos 10 valores de humedad: {humedad_input}")
-print(f"Últimos 10 valores de luz: {luz_input}")
+print(f"Últimos 10 valores de presion: {presion_input}")
+print(f"Últimos 10 valores de temperature: {temperature_input}")
 print(f"Datos de entrada para el modelo: {datos_input}")
 
 # Normalizar los datos de entrada con el scaler (se supone que ya tienes un scaler ajustado)
