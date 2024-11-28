@@ -74,8 +74,11 @@ def create_sequences(data, time_steps, label_width):
 # Crear las secuencias para LSTM
 X, y = create_sequences(scaled_data, tempData, time_steps)
 
-# Dividir los datos en conjunto de entrenamiento y prueba
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Dividir en entrenamiento (70%) y resto (30%)
+X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Dividir el resto (X_temp, y_temp) en validación (15%) y prueba (15%)
+X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=0.5, random_state=42)
 
 # Ruta del modelo LSTM
 model_path = "model.h5"
@@ -88,8 +91,8 @@ if os.path.exists(model_path):
 else:
     print("No se encontró un modelo LSTM existente. Creando uno nuevo...")
     model = Sequential([
-        LSTM(64, activation='relu', input_shape=(time_steps, features), return_sequences=True),
-        LSTM(32, activation='relu', return_sequences=False),
+        LSTM(64, activation='tanh', input_shape=(time_steps, features), return_sequences=True),
+        LSTM(32, activation='tanh', return_sequences=False),
         Dense(1, activation='linear')  # Salida de temperatura
     ])
     model.compile(
