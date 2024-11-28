@@ -46,6 +46,7 @@ except Exception as e:
 
 # Realizar la predicción
 prediccion = model.predict(datos_input_scaled, verbose=0)
+print("aaaaaaaaaaaaaaaaaaaaaaaaaa",prediccion)
 print(f"Predicción de la temperatura: {prediccion:.2f}")
 
 # Guardar la predicción en un archivo de texto
