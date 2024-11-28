@@ -43,25 +43,29 @@ lightData = filtered_dataFrame['light'].values
 # Reestructurar los datos en forma de secuencia
 def create_sequences(data, seq_length):
     sequences = []
-    for i in range(len(data) - seq_length):
+    for i in range(len(data) - seq_length + 1):  # Ajuste aquí para asegurarse de que las secuencias sean del tamaño adecuado
         sequences.append(data[i:i + seq_length])
     return np.array(sequences)
 
 seq_length = 2  # Longitud de la secuencia (puedes ajustarlo)
 X = np.column_stack((humidityData, lightData))
 X_seq = create_sequences(X, seq_length)  # Convertir X en secuencias
-y = tempData[seq_length:]  # Ajustar el tamaño de y para que coincida con X
+y = tempData[seq_length - 1:]  # Ajustar el tamaño de y para que coincida con X
 
+# Verificar las formas de X_train y X_test antes del reshape
 X_train, X_test, y_train, y_test = train_test_split(X_seq, y, test_size=0.2, random_state=42)
 
-# Verificar la forma de X_train antes del reshape
 print(f"Forma de X_train antes del reshape: {X_train.shape}")
+print(f"Forma de X_test antes del reshape: {X_test.shape}")
 
-# Verificar si el número de muestras es suficiente para el reshape
-num_samples = X_train.shape[0]
-if num_samples < seq_length:
-    print(f"Advertencia: El número de muestras ({num_samples}) es menor que seq_length ({seq_length}). Ajustando el valor de seq_length.")
-    seq_length = num_samples  # Ajustar seq_length para que sea igual al número de muestras
+# Verificar que las formas sean correctas
+if X_train.shape[0] % seq_length != 0:
+    print(f"Ajustando el número de muestras en X_train ({X_train.shape[0]}) para que sea divisible por {seq_length}.")
+    X_train = X_train[:-(X_train.shape[0] % seq_length)]  # Recortar para que sea divisible por seq_length
+
+if X_test.shape[0] % seq_length != 0:
+    print(f"Ajustando el número de muestras en X_test ({X_test.shape[0]}) para que sea divisible por {seq_length}.")
+    X_test = X_test[:-(X_test.shape[0] % seq_length)]  # Recortar para que sea divisible por seq_length
 
 # Redimensionar los datos para que sean compatibles con LSTM
 X_train = X_train.reshape((X_train.shape[0], seq_length, 2))  # 2 es el número de características (humedad y luz)
