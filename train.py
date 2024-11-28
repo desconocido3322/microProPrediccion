@@ -54,6 +54,23 @@ y = tempData[seq_length:]  # Ajustar el tamaño de y para que coincida con X
 
 X_train, X_test, y_train, y_test = train_test_split(X_seq, y, test_size=0.2, random_state=42)
 
+# Verificar la forma de X_train antes del reshape
+print(f"Forma de X_train antes del reshape: {X_train.shape}")
+
+# Asegúrate de que el número de muestras sea divisible por seq_length
+num_samples = X_train.shape[0]
+if num_samples % seq_length != 0:
+    print(f"Advertencia: El número de muestras ({num_samples}) no es divisible por {seq_length}. Ajustando el número de muestras.")
+    # Si es necesario, puedes recortar o ajustar el número de muestras para que sea divisible
+    X_train = X_train[:-(num_samples % seq_length)]  # Recorta para que sea divisible por seq_length
+
+# Redimensionar los datos para que sean compatibles con LSTM
+X_train = X_train.reshape((X_train.shape[0] // seq_length, seq_length, 2))  # 2 es el número de características (humedad y luz)
+X_test = X_test.reshape((X_test.shape[0] // seq_length, seq_length, 2))  # Hacer lo mismo con X_test
+
+print(f"Forma de X_train después del reshape: {X_train.shape}")
+print(f"Forma de X_test después del reshape: {X_test.shape}")
+
 # Normalización de datos
 scaler = MinMaxScaler()
 X_train = scaler.fit_transform(X_train.reshape(-1, 2))
