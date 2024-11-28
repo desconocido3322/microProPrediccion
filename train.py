@@ -107,7 +107,7 @@ history = model.fit(
     X_train, y_train,
     epochs=25,
     batch_size=4,
-    validation_data=(X_test, y_test),
+    validation_data=(X_val, y_val),
     verbose=1
 )
 
@@ -122,6 +122,9 @@ print(f'Mean Absolute Error (MAE): {mae:.4f}')
 
 # Hacer predicciones
 predictions = model.predict(X_test)
+
+print(predictions)
+print(y_test)
 
 # Calcular métricas de desempeño
 r2 = r2_score(y_test, predictions)
