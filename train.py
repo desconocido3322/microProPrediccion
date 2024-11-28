@@ -93,7 +93,7 @@ else:
     model = Sequential([
         LSTM(64, activation='tanh', input_shape=(time_steps, features), return_sequences=True),
         LSTM(32, activation='tanh', return_sequences=False),
-        Dense(1, activation='linear')  # Salida de temperatura
+        Dense(3, activation='linear')  # Salida de temperatura
     ])
     model.compile(
         optimizer='adam',
