@@ -62,17 +62,17 @@ time_steps = 10  # Ventana de tiempo para secuencias
 label_width = 3  # Número de pasos para el label
 features = 3    # Número de características (temperature,humidity, presion)
 
-def create_sequences(data, time_steps, label_width):
+def create_sequences(data, label, time_steps, label_width):
     X, y = [], []
     for i in range(len(data) - time_steps - label_width + 1):
         # Ventana de entrada
         X.append(data[i:i + time_steps])
         # Ventana de salida (label)
-        y.append(data[i + time_steps:i + time_steps + label_width, 0])  # Predicción sobre la primera característica (temperature)
+        y.append(label[i + time_steps:i + time_steps + label_width])  # Predicción sobre la primera característica (temperature)
     return np.array(X), np.array(y)
 
 # Crear las secuencias para LSTM
-X, y = create_sequences(scaled_data, tempData, time_steps)
+X, y = create_sequences(scaled_data, tempData, time_steps, label_width)
 
 # Dividir en entrenamiento (70%) y resto (30%)
 X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, random_state=42)
