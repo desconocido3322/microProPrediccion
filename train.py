@@ -72,7 +72,7 @@ X, y = create_sequences(data, tempData, time_steps)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Ruta del modelo LSTM
-model_path = "model_lstm.h5"
+model_path = "model.h5"
 
 # Crear o cargar el modelo LSTM
 if os.path.exists(model_path):
